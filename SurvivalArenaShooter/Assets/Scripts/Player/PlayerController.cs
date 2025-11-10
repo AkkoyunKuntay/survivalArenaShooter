@@ -26,6 +26,6 @@ public class PlayerController : MonoBehaviour
         movementVector.y = 0;
         movementVector.z = joystick.Vertical;
         
-        rb.velocity = new Vector3(movementVector.x, rb.velocity.y, movementVector.z) * movemetSpeed;
+        rb.velocity = new Vector3(movementVector.x, movementVector.y, movementVector.z) * movemetSpeed;
     }
 }
