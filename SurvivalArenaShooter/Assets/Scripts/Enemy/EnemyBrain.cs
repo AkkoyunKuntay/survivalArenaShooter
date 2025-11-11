@@ -1,74 +1,71 @@
-using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyBrain : MonoBehaviour
+public class EnemyBrain : MonoBehaviour, IPoolable
 {
     [Header("References")] 
-    [SerializeField] NavMeshAgent agent;
-    [SerializeField] EnemyPool enemyPool;
+    [SerializeField] private NavMeshAgent agent;
     [SerializeField] private Animator animator;
-    [SerializeField] private Transform target;
     [SerializeField] private HealthController healthController;
 
-    [Header("AI Settings")] [SerializeField]
-    private float moveSpeed = 3.5f;
+    private Transform target;
+    private EnemyPool pool;
 
-    [SerializeField] private float desiredStopDistance = 1.75f;
+    [Header("AI Settings")]
+    [SerializeField] private float moveSpeed = 3.5f;
     [SerializeField] private float attackRange = 1.75f;
-    [SerializeField] private float attackRate = 3f;
+    [SerializeField] private float attackRate = 2f;
 
-    private float _nextAttackTime;
-    private bool _isInitialized;
-    
-    public enum EnemyState
+    private float nextAttackTime;
+    private bool isInitialized;
+
+    private enum EnemyState { Idle, Chase, Attack }
+    private EnemyState currentState;
+
+    public void OnSpawned(Transform targetTransform, EnemyPool originPool)
     {
-        Idle,
-        Chase,
-        Attack
-    }
-    private EnemyState _currentState = EnemyState.Idle;
-
-    public void InitializeEnemy(Transform targetTransform, EnemyPool pool)
-    {
-        enemyPool = pool;
-        agent = GetComponent<NavMeshAgent>();
-        animator = GetComponentInChildren<Animator>();
-        healthController = GetComponent<HealthController>();
-        
-        healthController.Initialize();
-        healthController.OnDeathEvent += OnEnemyDeath;
-
-        agent.speed = moveSpeed;
-        agent.stoppingDistance = desiredStopDistance;
-
+        pool = originPool;
         target = targetTransform;
-        transform.LookAt(target);
 
-        ChangeState(EnemyState.Chase);
-        _isInitialized = true;
+        if (!isInitialized)
+        {
+            agent = GetComponent<NavMeshAgent>();
+            animator = GetComponentInChildren<Animator>();
+            healthController = GetComponent<HealthController>();
+            healthController.OnDeathEvent += OnEnemyDeath;
+            isInitialized = true;
+        }
+
+        healthController.Initialize();
+        agent.enabled = true;
+        agent.speed = moveSpeed;
+
+        currentState = EnemyState.Chase;
+        EventBus<EnemyBrain>.Invoke(EventType.OnEnemySpawned, this);
+    }
+
+    public void OnDespawned()
+    {
+        agent.enabled = false;
+        EventBus<EnemyBrain>.Invoke(EventType.OnEnemyDespawned, this);
     }
 
     private void Update()
     {
-        if (!_isInitialized || target == null || !agent.enabled) return;
-        
+        if (target == null || !agent.enabled) return;
+
         float distance = Vector3.Distance(transform.position, target.position);
 
-        switch (_currentState)
+        switch (currentState)
         {
             case EnemyState.Chase:
                 HandleChase(distance);
                 break;
-
             case EnemyState.Attack:
                 HandleAttack(distance);
                 break;
         }
     }
-
-    #region AI State Logic
 
     private void HandleChase(float distance)
     {
@@ -78,7 +75,7 @@ public class EnemyBrain : MonoBehaviour
 
         if (distance <= attackRange)
         {
-            ChangeState(EnemyState.Attack);
+            currentState = EnemyState.Attack;
         }
     }
 
@@ -86,56 +83,21 @@ public class EnemyBrain : MonoBehaviour
     {
         agent.isStopped = true;
 
-        if (Time.time >= _nextAttackTime)
+        if (Time.time >= nextAttackTime)
         {
-            _nextAttackTime = Time.time + attackRate;
+            nextAttackTime = Time.time + attackRate;
             animator.SetTrigger("Attack");
-            // TODO: Damage uygulama fonksiyonunu burada çağır
+            // TODO: burada damage sistemi çalışır
         }
 
-
-        if (distance > attackRange + 0.25f)
+        if (distance > attackRange + 0.5f)
         {
-            ChangeState(EnemyState.Chase);
+            currentState = EnemyState.Chase;
         }
     }
-
-    private void ChangeState(EnemyState newState)
-    {
-        _currentState = newState;
-
-        switch (newState)
-        {
-            case EnemyState.Chase:
-                agent.isStopped = false;
-                animator.ResetTrigger("Attack");
-                break;
-            case EnemyState.Attack:
-                agent.isStopped = true;
-                break;
-        }
-    }
-
-    #endregion
-
-    #region Subscribed Events Logic
 
     private void OnEnemyDeath()
     {
-        enemyPool.ReturnEnemy(gameObject);
+        pool.ReturnEnemy(gameObject);
     }
-
-    #endregion
-    
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.TryGetComponent<PlayerController>(out PlayerController player))
-        {
-            //Enemy Health Controller Test
-            healthController.TakeDamage(10);
-        }
-    }
-
-   
 }
-

@@ -43,14 +43,20 @@ public class HealthController : MonoBehaviour,IDamageable
     {
         health = 0;
         //TO DO: Death particles
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(.5f);
         OnDeathEvent?.Invoke();
     }
     private void RestoreHealth()
     {
         health = defaultHealth;
     }
-   
-    
-   
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.TryGetComponent<EnemyBrain>(out EnemyBrain enemy))
+        {
+            TakeDamage(10);
+            Debug.Log("Damage taken!");
+        }
+    }
 }

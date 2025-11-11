@@ -8,44 +8,36 @@ public class EnemyPool : MonoBehaviour
     [SerializeField] private int initialPoolSize = 20;
     [SerializeField] private Transform poolParent;
 
-    private readonly Queue<GameObject> _poolQueue = new Queue<GameObject>();
+    private readonly Queue<GameObject> poolQueue = new();
 
     private void Awake()
     {
-        InitializePool();
-    }
-
-    private void InitializePool()
-    {
         for (int i = 0; i < initialPoolSize; i++)
         {
-            GameObject enemy = Instantiate(enemyPrefab, poolParent);
+            var enemy = Instantiate(enemyPrefab, poolParent);
             enemy.SetActive(false);
-            _poolQueue.Enqueue(enemy);
+            poolQueue.Enqueue(enemy);
         }
     }
 
-    public GameObject GetEnemy(Vector3 position, Quaternion rotation)
+    public GameObject GetEnemy(Vector3 position, Quaternion rotation, Transform target)
     {
-        GameObject enemy;
-
-        if (_poolQueue.Count > 0)
-        {
-            enemy = _poolQueue.Dequeue();
-            enemy.transform.SetPositionAndRotation(position, rotation);
-        }
-        else
-        {
-            enemy = Instantiate(enemyPrefab, position, rotation, poolParent);
-        }
-
+        GameObject enemy = poolQueue.Count > 0 ? poolQueue.Dequeue() : Instantiate(enemyPrefab, poolParent);
+        enemy.transform.SetPositionAndRotation(position, rotation);
         enemy.SetActive(true);
+
+        if (enemy.TryGetComponent(out IPoolable poolable))
+            poolable.OnSpawned(target, this);
+
         return enemy;
     }
 
     public void ReturnEnemy(GameObject enemy)
     {
+        if (enemy.TryGetComponent(out IPoolable poolable))
+            poolable.OnDespawned();
+
         enemy.SetActive(false);
-        _poolQueue.Enqueue(enemy);
+        poolQueue.Enqueue(enemy);
     }
 }

@@ -17,75 +17,43 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private float waveDelay = 5f;
     [SerializeField] private int totalWaves = 3;
 
-    private int currentWave = 0;
-    private bool spawningActive = true;
-
     private void Start()
     {
-        if (!mainCamera)
-            mainCamera = Camera.main;
-        if (!enemyPool)
-            enemyPool = FindObjectOfType<EnemyPool>();
-
+        if (!mainCamera) mainCamera = Camera.main;
         StartCoroutine(SpawnRoutine());
     }
 
     private IEnumerator SpawnRoutine()
     {
-        while (currentWave < totalWaves && spawningActive)
+        for (int w = 0; w < totalWaves; w++)
         {
-            yield return StartCoroutine(SpawnWave());
-            currentWave++;
+            for (int i = 0; i < enemiesPerWave; i++)
+            {
+                Vector3 spawnPos = GetSpawnPosition();
+                enemyPool.GetEnemy(spawnPos, Quaternion.identity, player);
+                yield return new WaitForSeconds(spawnInterval);
+            }
+
             yield return new WaitForSeconds(waveDelay);
         }
     }
 
-    private IEnumerator SpawnWave()
+    private Vector3 GetSpawnPosition()
     {
-        for (int i = 0; i < enemiesPerWave; i++)
+        for (int i = 0; i < 10; i++)
         {
-            Vector3 spawnPoint = GetValidSpawnPosition();
-            if (spawnPoint != Vector3.zero)
-            {
-               GameObject enemy = enemyPool.GetEnemy(spawnPoint, Quaternion.identity);
-               EnemyBrain enemyBrain = enemy.GetComponent<EnemyBrain>();
-               enemyBrain.InitializeEnemy(transform,enemyPool);
-            }
+            Vector2 rand = Random.insideUnitCircle.normalized;
+            float dist = Random.Range(minSpawnDistance, maxSpawnDistance);
+            Vector3 pos = player.position + new Vector3(rand.x, 0, rand.y) * dist;
 
-            yield return new WaitForSeconds(spawnInterval);
-        }
-    }
+            Vector3 camDir = mainCamera.transform.forward;
+            Vector3 dirToSpawn = (pos - player.position).normalized;
+            if (Vector3.Dot(camDir, dirToSpawn) > 0.3f) continue;
 
-    private Vector3 GetValidSpawnPosition()
-    {
-        for (int attempt = 0; attempt < 15; attempt++)
-        {
-            Vector2 randomDir2D = Random.insideUnitCircle.normalized;
-            float distance = Random.Range(minSpawnDistance, maxSpawnDistance);
-            Vector3 candidatePos = player.position + new Vector3(randomDir2D.x, 0, randomDir2D.y) * distance;
-
-            Vector3 camForward = mainCamera.transform.forward;
-            Vector3 dirToSpawn = (candidatePos - player.position).normalized;
-            float dot = Vector3.Dot(camForward, dirToSpawn);
-            if (dot > 0.3f)
-                continue;
-
-            if (NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
                 return hit.position;
         }
 
         return player.position - player.forward * maxSpawnDistance;
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (player == null)
-            return;
-
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(player.position, minSpawnDistance);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(player.position, maxSpawnDistance);
     }
 }
