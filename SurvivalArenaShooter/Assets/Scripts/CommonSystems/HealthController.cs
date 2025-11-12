@@ -25,7 +25,7 @@ public class HealthController : MonoBehaviour,IDamageable
     {
         RestoreHealth();
     }
-    public void TakeDamage(int damage)
+    public void TakeDamage(float damage)
     {
         health -= damage;
         OnHealthChangeEvent?.Invoke(health);
@@ -55,7 +55,7 @@ public class HealthController : MonoBehaviour,IDamageable
     {
         if(other.TryGetComponent<EnemyBrain>(out EnemyBrain enemy))
         {
-            TakeDamage(10);
+            TakeDamage(enemy.GetDamage());
             Debug.Log("Damage taken!");
         }
     }

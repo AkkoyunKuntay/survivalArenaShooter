@@ -12,17 +12,30 @@ public class EnemySpawner : MonoBehaviour
     [Header("Spawn Settings")]
     [SerializeField] private float minSpawnDistance = 8f;
     [SerializeField] private float maxSpawnDistance = 15f;
-    [SerializeField] private int enemiesPerWave = 5;
     [SerializeField] private float spawnInterval = 0.5f;
     [SerializeField] private float waveDelay = 5f;
+    
+    [Header("Difficulty Relative Settings")]
+    [SerializeField] private int enemiesPerWave = 5;
     [SerializeField] private int totalWaves = 3;
 
     private void Start()
     {
         if (!mainCamera) mainCamera = Camera.main;
-        StartCoroutine(SpawnRoutine());
+        GameManager.instance.LevelStartedEvent += OnLevelStartedEvent;
     }
 
+    private void OnLevelStartedEvent()
+    {
+        InitializeLevelDifficultyConfig();
+        StartCoroutine(SpawnRoutine());
+    }
+    private void InitializeLevelDifficultyConfig()
+    {
+        LevelRuntimeConfig levelConfig = LevelManager.instance.RuntimeConfig;
+        totalWaves = levelConfig.waves;
+        enemiesPerWave = levelConfig.enemiesPerWave;
+    }
     private IEnumerator SpawnRoutine()
     {
         for (int w = 0; w < totalWaves; w++)
@@ -37,7 +50,6 @@ public class EnemySpawner : MonoBehaviour
             yield return new WaitForSeconds(waveDelay);
         }
     }
-
     private Vector3 GetSpawnPosition()
     {
         for (int i = 0; i < 10; i++)

@@ -15,12 +15,21 @@ public class EnemyBrain : MonoBehaviour, IPoolable
     [SerializeField] private float moveSpeed = 3.5f;
     [SerializeField] private float attackRange = 1.75f;
     [SerializeField] private float attackRate = 2f;
+    
+    [Header("Debug")]
+    [SerializeField] private float damage;
 
     private float nextAttackTime;
     private bool isInitialized;
 
     private enum EnemyState { Idle, Chase, Attack }
     private EnemyState currentState;
+
+    public float GetDamage()
+    {
+        damage = LevelManager.instance.RuntimeConfig.enemyDamage;
+        return damage;
+    }
 
     public void OnSpawned(Transform targetTransform, EnemyPool originPool)
     {
@@ -69,7 +78,7 @@ public class EnemyBrain : MonoBehaviour, IPoolable
 
     private void HandleChase(float distance)
     {
-        agent.isStopped = false;
+        if(!agent.enabled) return;
         agent.SetDestination(target.position);
         animator.SetTrigger("isRunning");
 
@@ -81,13 +90,11 @@ public class EnemyBrain : MonoBehaviour, IPoolable
 
     private void HandleAttack(float distance)
     {
-        agent.isStopped = true;
-
         if (Time.time >= nextAttackTime)
         {
             nextAttackTime = Time.time + attackRate;
             animator.SetTrigger("Attack");
-            // TODO: burada damage sistemi çalışır
+            //TODO: Animation Event Attack ? 
         }
 
         if (distance > attackRange + 0.5f)
@@ -98,6 +105,7 @@ public class EnemyBrain : MonoBehaviour, IPoolable
 
     private void OnEnemyDeath()
     {
+        Stats.AddKill(1);
         pool.ReturnEnemy(gameObject);
     }
 }
