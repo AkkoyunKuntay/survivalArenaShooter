@@ -22,6 +22,8 @@ public class EnemyPool : MonoBehaviour
 
     public GameObject GetEnemy(Vector3 position, Quaternion rotation, Transform target)
     {
+        if(!target) return null;
+        
         GameObject enemy = poolQueue.Count > 0 ? poolQueue.Dequeue() : Instantiate(enemyPrefab, poolParent);
         enemy.transform.SetPositionAndRotation(position, rotation);
         enemy.SetActive(true);

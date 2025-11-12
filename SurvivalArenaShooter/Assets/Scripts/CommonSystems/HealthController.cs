@@ -6,14 +6,14 @@ using UnityEngine.AI;
 
 public class HealthController : MonoBehaviour,IDamageable
 {
-    [Header("References")]
-    
+       
     [Header("Health Settings")]
     [SerializeField] private float health = 100f;
     [SerializeField] private float defaultHealth;
 
+    [SerializeField] private bool isInvincible;
     //Events
-    public System.Action<float> OnHealthChangeEvent;
+    public System.Action OnHealthChangeEvent;
     public System.Action OnDeathEvent;
     
     private void Awake()
@@ -21,14 +21,26 @@ public class HealthController : MonoBehaviour,IDamageable
         defaultHealth = health;
     }
 
+    private void Start()
+    {
+        LevelManager.instance.TimerFinishedEvent += OnTimeFinished;
+    }
+
+    private void OnTimeFinished()
+    {
+        SetInvincible(true);
+    }
     public void Initialize()
     {
         RestoreHealth();
+        
     }
     public void TakeDamage(float damage)
     {
+        if(isInvincible) return;
+        
         health -= damage;
-        OnHealthChangeEvent?.Invoke(health);
+        OnHealthChangeEvent?.Invoke();
         if (health <= 0)
         {
             Dead();
@@ -39,23 +51,26 @@ public class HealthController : MonoBehaviour,IDamageable
         StartCoroutine(DeathRoutine());
     }
 
+    private void SetInvincible(bool value)
+    {
+        isInvincible = value;
+    }
     private IEnumerator DeathRoutine()
     {
         health = 0;
-        //TO DO: Death particles
-        yield return new WaitForSeconds(.5f);
+        
+        yield return new WaitForSeconds(.1f);
         OnDeathEvent?.Invoke();
     }
     private void RestoreHealth()
     {
         health = defaultHealth;
     }
-
     private void OnTriggerEnter(Collider other)
     {
         if(other.TryGetComponent<EnemyBrain>(out EnemyBrain enemy))
         {
-            TakeDamage(enemy.GetDamage());
+            TakeDamage(enemy.damage);
             Debug.Log("Damage taken!");
         }
     }

@@ -15,9 +15,17 @@ public class PlayerController : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private Vector3 movementVector;
 
-    private void FixedUpdate()
+    private void Start()
     {
-        HandleMovement();
+       
+    }
+
+    private void FixedUpdate()
+    { 
+        if (!GameManager.instance.isLevelSuccessful)
+        {
+            HandleMovement();
+        } 
     }
 
     private void HandleMovement()

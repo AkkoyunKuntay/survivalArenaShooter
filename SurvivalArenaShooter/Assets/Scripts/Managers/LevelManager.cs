@@ -19,6 +19,7 @@ public class LevelManager : CustomSingleton<LevelManager>
 
     public System.Action TimerFinishedEvent;
 
+    public float GetTimer() { return timer; }
     protected override void Awake()
     {
         base.Awake();

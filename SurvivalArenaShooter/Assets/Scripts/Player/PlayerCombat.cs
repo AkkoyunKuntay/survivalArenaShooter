@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,12 +21,22 @@ public class PlayerCombat : MonoBehaviour
     private readonly List<EnemyBrain> detectedEnemies = new();
     private float nextAttackTime;
 
+    private void Start()
+    {
+        HealthController healthController = GetComponent<HealthController>();
+        healthController.OnDeathEvent += OnPlayerDeath;
+    }
+
+    public void OnPlayerDeath()
+    {
+        gameObject.SetActive(false);
+        GameManager.instance.EndGame(false);
+    }
     private void OnEnable()
     {
         EventBus<EnemyBrain>.Subscribe(EventType.OnEnemySpawned, RegisterEnemy);
         EventBus<EnemyBrain>.Subscribe(EventType.OnEnemyDespawned, UnregisterEnemy);
     }
-
     private void OnDisable()
     {
         EventBus<EnemyBrain>.Unsubscribe(EventType.OnEnemySpawned, RegisterEnemy);
@@ -44,6 +55,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
+        if(GameManager.instance.isLevelSuccessful && !GameManager.instance.isLevelActive) return;
         currentTarget = GetClosestEnemy();
         if (currentTarget == null)
             return;
@@ -70,8 +82,6 @@ public class PlayerCombat : MonoBehaviour
             
         }
     }
-
-
     private EnemyBrain GetClosestEnemy()
     {
         EnemyBrain closestEnemy = null;

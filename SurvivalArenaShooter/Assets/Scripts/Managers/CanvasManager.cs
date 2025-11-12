@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ public class CanvasManager : MonoBehaviour
     [Header("UI References")] 
     [SerializeField] private TextMeshProUGUI levelIndex;
     [SerializeField] private TextMeshProUGUI totalKill;
+    [SerializeField] private TextMeshProUGUI timerTxt;
 
     [Header("Debug")] [SerializeField] CanvasVisibilityController activeCanvas;
 
@@ -33,6 +35,11 @@ public class CanvasManager : MonoBehaviour
         GameManager.instance.LevelStartedEvent += OnLevelStarted;
         GameManager.instance.LevelFailedEvent += OnLevelFailed;
         GameManager.instance.LevelSuccessEvent += OnLevelSuccessfull;
+    }
+
+    private void Update()
+    {
+        UpdateTimer();
     }
 
     private void OnLevelStarted()
@@ -72,5 +79,11 @@ public class CanvasManager : MonoBehaviour
         }
 
         activeCanvas.Show();
+    }
+
+    private void UpdateTimer()
+    {
+        float timerCount = LevelManager.instance.GetTimer();
+        timerTxt.text = $"Timer : {Mathf.RoundToInt(timerCount)}";
     }
 }

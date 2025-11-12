@@ -1,5 +1,8 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 
 public class EnemyBrain : MonoBehaviour, IPoolable
 {
@@ -7,7 +10,9 @@ public class EnemyBrain : MonoBehaviour, IPoolable
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private Animator animator;
     [SerializeField] private HealthController healthController;
-
+    [SerializeField] private Rigidbody rb;
+    [SerializeField] private ParticleSystem hitParticles;
+    
     private Transform target;
     private EnemyPool pool;
 
@@ -15,9 +20,7 @@ public class EnemyBrain : MonoBehaviour, IPoolable
     [SerializeField] private float moveSpeed = 3.5f;
     [SerializeField] private float attackRange = 1.75f;
     [SerializeField] private float attackRate = 2f;
-    
-    [Header("Debug")]
-    [SerializeField] private float damage;
+    public float damage;
 
     private float nextAttackTime;
     private bool isInitialized;
@@ -25,7 +28,7 @@ public class EnemyBrain : MonoBehaviour, IPoolable
     private enum EnemyState { Idle, Chase, Attack }
     private EnemyState currentState;
 
-    public float GetDamage()
+    private float GetDamage()
     {
         damage = LevelManager.instance.RuntimeConfig.enemyDamage;
         return damage;
@@ -35,12 +38,13 @@ public class EnemyBrain : MonoBehaviour, IPoolable
     {
         pool = originPool;
         target = targetTransform;
-
+        damage = GetDamage();
         if (!isInitialized)
         {
             agent = GetComponent<NavMeshAgent>();
             animator = GetComponentInChildren<Animator>();
             healthController = GetComponent<HealthController>();
+            
             healthController.OnDeathEvent += OnEnemyDeath;
             isInitialized = true;
         }
@@ -50,12 +54,13 @@ public class EnemyBrain : MonoBehaviour, IPoolable
         agent.speed = moveSpeed;
 
         currentState = EnemyState.Chase;
+        healthController.OnHealthChangeEvent += OnEnemyTakeDamage;
         EventBus<EnemyBrain>.Invoke(EventType.OnEnemySpawned, this);
     }
 
     public void OnDespawned()
     {
-        agent.enabled = false;
+        
         EventBus<EnemyBrain>.Invoke(EventType.OnEnemyDespawned, this);
     }
 
@@ -78,7 +83,8 @@ public class EnemyBrain : MonoBehaviour, IPoolable
 
     private void HandleChase(float distance)
     {
-        if(!agent.enabled) return;
+        if(!agent.enabled || !target) return;
+        
         agent.SetDestination(target.position);
         animator.SetTrigger("isRunning");
 
@@ -103,9 +109,16 @@ public class EnemyBrain : MonoBehaviour, IPoolable
         }
     }
 
+    private void OnEnemyTakeDamage()
+    {
+        hitParticles.Play();
+    }
     private void OnEnemyDeath()
     {
         Stats.AddKill(1);
         pool.ReturnEnemy(gameObject);
     }
+    
+
+    
 }
