@@ -47,8 +47,9 @@ MonoBehaviour:
   levelTime: 30
   levelData: {fileID: 11400000, guid: 221d6272ee8548e4b98d4dd37dd17564, type: 2}
   RuntimeConfig:
-    waves: 0
-    enemiesPerWave: 0
+    waves: 1
+    enemiesPerWave: 5
     enemyDamage: 3
+    enemyHP: 2
   timerActive: 0
   timer: 0

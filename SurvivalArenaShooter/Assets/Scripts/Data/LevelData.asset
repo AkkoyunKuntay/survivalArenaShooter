@@ -17,9 +17,11 @@ MonoBehaviour:
   baseWaves: 3
   baseEnemiesPerWave: 5
   baseEnemyDamage: 5
+  baseEnemyHP: 5
   wavesGrowthPerStage: 0.5
-  enemiesGrowthPerStage: 0.1
-  damageGrowthPerStage: 0.08
+  enemiesGrowthPerStage: 0.5
+  damageGrowthPerStage: 0.2
+  hpGrowthPerStage: 0.1
   wavesByStage:
     serializedVersion: 2
     m_Curve: []
@@ -38,6 +40,13 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  hpByStage:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   maxWaves: 20
   maxEnemiesPerWave: 100
   maxEnemyDamage: 999
+  maxEnemyHP: 25

@@ -6,6 +6,7 @@ public class LevelRuntimeConfig
     public int waves;
     public int enemiesPerWave;
     public int enemyDamage;
+    public int enemyHP;  
 }
 
 public class LevelManager : CustomSingleton<LevelManager>
@@ -29,10 +30,12 @@ public class LevelManager : CustomSingleton<LevelManager>
     private void Start()
     {
         int stageCount = GameManager.instance.GetTotalStagePlayed();
-        levelData.EvaluateForStage(stageCount, out int waves, out int enemiesPerWave, out int enemyDamage);
+        levelData.EvaluateForStage(stageCount, out int waves, out int enemiesPerWave, out int enemyDamage, out int enemyHP);
+
         RuntimeConfig.waves = waves;
         RuntimeConfig.enemiesPerWave = enemiesPerWave;
         RuntimeConfig.enemyDamage = enemyDamage;
+        RuntimeConfig.enemyHP = enemyHP; 
 
         GameManager.instance.LevelStartedEvent += OnLevelStarted;
     }

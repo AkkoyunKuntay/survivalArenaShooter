@@ -48,11 +48,13 @@ public class EnemyBrain : MonoBehaviour, IPoolable
             healthController.OnDeathEvent += OnEnemyDeath;
             isInitialized = true;
         }
-
+        int hp = LevelManager.instance.RuntimeConfig.enemyHP; 
+        healthController.SetHealth(hp);
         healthController.Initialize();
         agent.enabled = true;
         agent.speed = moveSpeed;
 
+        
         currentState = EnemyState.Chase;
         healthController.OnHealthChangeEvent += OnEnemyTakeDamage;
         EventBus<EnemyBrain>.Invoke(EventType.OnEnemySpawned, this);

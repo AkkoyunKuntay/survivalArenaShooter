@@ -53,7 +53,7 @@ public class PlayerCombat : MonoBehaviour
         detectedEnemies.Remove(enemy);
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if(GameManager.instance.isLevelSuccessful && !GameManager.instance.isLevelActive) return;
         currentTarget = GetClosestEnemy();

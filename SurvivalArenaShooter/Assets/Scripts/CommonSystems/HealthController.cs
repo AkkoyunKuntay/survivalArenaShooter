@@ -33,7 +33,6 @@ public class HealthController : MonoBehaviour,IDamageable
     public void Initialize()
     {
         RestoreHealth();
-        
     }
     public void TakeDamage(float damage)
     {
@@ -51,6 +50,11 @@ public class HealthController : MonoBehaviour,IDamageable
         StartCoroutine(DeathRoutine());
     }
 
+    public void SetHealth(float newHealth)
+    {
+        defaultHealth = newHealth;
+        health = newHealth;
+    }
     private void SetInvincible(bool value)
     {
         isInvincible = value;
